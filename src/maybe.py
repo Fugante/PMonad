@@ -28,7 +28,7 @@ class Maybe[A](Monad[A], Monoid[A], Foldable[A]):
     def mempty(cls) -> Maybe[A]:
         return Nothing()
 
-    def mappend(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
+    def mappend(self: Maybe[Monoid[A]], m: Maybe[Monoid[A]]) -> Maybe[Monoid[A]]:
         match (self, m):
             case (Just(value=a1), Just(value=a2)):
                 return Just(a1.mappend(a2))

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Callable
 
 
@@ -31,12 +31,3 @@ class Monad[A](Applicative[A], ABC):
 
 class Foldable[A](ABC):
     def fold[A, B](self: Foldable[A], f: Callable[[A, B], B], b: B) -> B: ...
-
-
-class MonadTrans[A](ABC):
-    @classmethod
-    def lift[A](cls, ma: Monad[A]) -> MonadTrans[A]:
-        mt = cls.__new__()
-        mt._base_monad = ma.__class__
-        mt.value = ma
-        return mt
