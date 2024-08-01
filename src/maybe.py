@@ -1,5 +1,4 @@
 from __future__ import annotations
-from inspect import signature
 from functools import partial
 from typing import Callable
 
@@ -44,11 +43,10 @@ class Maybe[A](Monad[A], Monoid, Foldable[A]):
     def map[A, B](self: Maybe[A], f: Callable[A, B]) -> Maybe[B]:
         match self:
             case Just(value=a):
-                b = partial(f, a)
-                params = signature(f).parameters
-                # TODO: raise error if the function's argument number is 0
-                if len(params) == 1:
-                    b = b()
+                try:
+                    b = f(a)
+                except ValueError:
+                    b = partial(f, a)
                 return Maybe(b)
             case Nothing():
                 return Nothing()
@@ -56,11 +54,10 @@ class Maybe[A](Monad[A], Monoid, Foldable[A]):
     def apply[A, B](self: Maybe[A], f: Maybe[Callable[A, B]]) -> Maybe[B]:
         match (self, f):
             case (Just(value=a), Just(value=f)):
-                b = partial(f, a)
-                params = signature(f).parameters
-                # TODO: raise error if the function's argument number is 0
-                if len(params) == 1:
-                    b = b()
+                try:
+                    b = f(a)
+                except ValueError:
+                    b = partial(f, a)
                 return Maybe(b)
             case _:
                 return Nothing()

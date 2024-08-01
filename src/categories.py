@@ -31,3 +31,13 @@ class Monad[A](Applicative[A], ABC):
 
 class Foldable[A](ABC):
     def fold[A, B](self: Foldable[A], f: Callable[[A, B], B], b: B) -> B: ...
+
+
+class MonadTrans[M: Monad, A](Monad, ABC):
+    @classmethod
+    def lift(cls, ma: Monad[A]) -> MonadTrans[M, A]:
+        # TODO: validate ma is an isinstance of Monad
+        mt = cls.__new__()
+        mt._base_monad = ma.__class__
+        mt.value = ma
+        return mt

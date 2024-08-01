@@ -6,7 +6,7 @@ from .categories import Monad, Foldable
 
 
 class IO[A](Monad, Foldable, Callable):
-    def __init__(self, effect: Callable[A]) -> None:
+    def __init__(self, effect: Callable[A] | None = None) -> None:
         self.executed = False
         self.effect = effect
         self.result = None
@@ -33,14 +33,24 @@ class IO[A](Monad, Foldable, Callable):
     def map[A, B](self: IO[A], f: Callable[A, B]) -> IO[B]:
         if not self.executed:
             self()
-        return IO(f(self.value))
+        try:
+            b = f(self.result)
+        except ValueError:
+            b = partial(f, self.result)
+        self.result = b
+        return self
 
     def apply[A, B](self: IO[A], f: IO[Callable[A, B]]) -> IO[B]:
         if not self.executed:
             self()
         if not f.executed:
             f()
-        return IO(f.result(self.result))
+        try:
+            b = f.result(self.result)
+        except ValueError:
+            b = partial(f.result, self.result)
+        self.result = b
+        return self
 
     def bind[A, B](self: IO[A], f: Callable[A, IO[B]]) -> IO[B]:
         if not self.executed:

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from inspect import signature
 from functools import partial
 from typing import Callable
 
@@ -21,21 +20,27 @@ class Mdict[T, A](dict, Monoid, Monad, Foldable):
         return self.update(m)
 
     def map[A, B](self: Mdict[T, A], f: Callable[A, B]) -> Mdict[T, B]:
-        params = signature(f).parameters
-        # TODO: raise error if parameters lenght is 0
-        if len(params) == 1:
-            return Mdict({t: f(a) for (t, a) in self.items()})
-        return Mdict({t: partial(f, a) for (t, a) in self.items()})
+        bs = Mdict()
+        for t, a in self.items():
+            try:
+                b = f(a)
+            except ValueError:
+                b = partial(f, a)
+            bs[t] = b
+        return bs
 
     def apply[A, B](
         self: Mdict[Monoid, A], f: Mdict[Monoid, Callable[A, B]]
     ) -> Mdict[Monoid, B]:
-        # TODO: validate all functions have the same signature
         # TODO: raise error if self and f are not Monoids
         d = Mdict()
         for m1, a in self.items():
             for m2, f in f.items():
-                d[m1.mappend(m2)] = f(a)
+                try:
+                    b = f(a)
+                except ValueError:
+                    b = partial(f, a)
+                d[m1.mappend(m2)] = b
         return d
 
     def bind[A, B](self: Mdict[T, A], f: Callable[A, Mdict[T, B]]) -> Mdict[T, B]:
