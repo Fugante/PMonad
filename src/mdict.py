@@ -15,7 +15,7 @@ class MDict[T, A](dict, Monoid, Monad, Foldable):
     def mempty(cls) -> MDict[T, A]:
         return cls()
 
-    def mappend(self: MDict[T, A], m: MDict[T, A]) -> MDict[T, A]:
+    def append(self: MDict[T, A], m: MDict[T, A]) -> MDict[T, A]:
         return self.update(m)
 
     def map[A, B](self: MDict[T, A], f: Callable[A, B]) -> MDict[T, B]:

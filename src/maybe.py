@@ -29,7 +29,7 @@ class Maybe[A](Monad[A], Monoid, Foldable[A]):
     def mempty(cls) -> Maybe[A]:
         return Nothing()
 
-    def mappend(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
+    def append(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
         # TODO: raise error if self or m are not instances of Monoid
         match (self, m):
             case (Just(value=a1), Just(value=a2)):
