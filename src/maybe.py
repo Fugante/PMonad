@@ -1,11 +1,12 @@
 from __future__ import annotations
+from inspect import signature
 from functools import partial
 from typing import Callable
 
 from .categories import Monoid, Monad, Foldable
 
 
-class Maybe[A](Monad[A], Monoid[A], Foldable[A]):
+class Maybe[A](Monad[A], Monoid, Foldable[A]):
     def __new__(cls, value=None) -> Maybe[A]:
         if value is None:
             return super().__new__(Nothing)
@@ -28,7 +29,8 @@ class Maybe[A](Monad[A], Monoid[A], Foldable[A]):
     def mempty(cls) -> Maybe[A]:
         return Nothing()
 
-    def mappend(self: Maybe[Monoid[A]], m: Maybe[Monoid[A]]) -> Maybe[Monoid[A]]:
+    def mappend(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
+        # TODO: raise error if self or m are not instances of Monoid
         match (self, m):
             case (Just(value=a1), Just(value=a2)):
                 return Just(a1.mappend(a2))
@@ -40,18 +42,26 @@ class Maybe[A](Monad[A], Monoid[A], Foldable[A]):
                 return Nothing()
 
     def map[A, B](self: Maybe[A], f: Callable[A, B]) -> Maybe[B]:
-        try:
-            b: B = f(self.value)
-        except AttributeError:
-            b = None
-        except TypeError:
-            b: B = partial(f, self.value)
-        return Maybe(b)
+        match self:
+            case Just(value=a):
+                b = partial(f, a)
+                params = signature(f).parameters
+                # TODO: raise error if the function's argument number is 0
+                if len(params) == 1:
+                    b = b()
+                return Maybe(b)
+            case Nothing():
+                return Nothing()
 
     def apply[A, B](self: Maybe[A], f: Maybe[Callable[A, B]]) -> Maybe[B]:
         match (self, f):
             case (Just(value=a), Just(value=f)):
-                return Maybe(f(a))
+                b = partial(f, a)
+                params = signature(f).parameters
+                # TODO: raise error if the function's argument number is 0
+                if len(params) == 1:
+                    b = b()
+                return Maybe(b)
             case _:
                 return Nothing()
 
