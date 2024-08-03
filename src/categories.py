@@ -3,15 +3,17 @@ from abc import ABC
 from typing import Callable
 
 
-class Monoid(ABC):
+class Semigroup(ABC):
+    def append(self: Semigroup, s: Semigroup) -> Semigroup: ...
+
+
+class Monoid(Semigroup, ABC):
     @classmethod
     def mempty(cls) -> Monoid: ...
 
-    def append(self: Monoid, m: Monoid) -> Monoid: ...
-
 
 class Functor[A](ABC):
-    def map[A, B](self: Functor[A], f: Callable[A, B]) -> Functor[B]: ...
+    def map[B](self: Functor[A], f: Callable[A, B]) -> Functor[B]: ...
 
 
 class Applicative[A](Functor[A], ABC):
