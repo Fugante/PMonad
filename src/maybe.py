@@ -1,11 +1,12 @@
 from __future__ import annotations
+from abc import ABC
 from functools import partial
 from typing import Callable
 
 from .categories import Monoid, Monad, Foldable
 
 
-class Maybe[A](Monad[A], Monoid, Foldable[A]):
+class Maybe[A](Monad[A], Monoid, Foldable[A], ABC):
     def __new__(cls, value=None) -> Maybe[A]:
         if value is None:
             return super().__new__(Nothing)
@@ -14,7 +15,7 @@ class Maybe[A](Monad[A], Monoid, Foldable[A]):
         return maybe
 
     def __add__(self: Maybe[A], m: Maybe[A]) -> Maybe[A]:
-        return self.mappend(m)
+        return self.append(m)
 
     @property
     def is_just[A](self: Maybe[A]) -> bool:
