@@ -15,18 +15,21 @@ class Functor[A](ABC):
 
 
 class Applicative[A](Functor[A], ABC):
-    def apply[A, B](
+    def apply[B](
         self: Applicative[A], f: Applicative[Callable[A, B]]
     ) -> Applicative[B]: ...
 
-    def liftA2[A, B, C](
+    def liftA2[B, C](
         self: Applicative[A], f: Callable[[A, B], C], fb: Applicative[B]
     ) -> Applicative[C]:
         fb.apply(self.map(f))
 
 
 class Monad[A](Applicative[A], ABC):
-    def bind[A, B](self: Monad[A], f: Callable[A, Monad[B]]) -> Monad[B]: ...
+    def bind[B](self: Monad[A], f: Callable[A, Monad[B]]) -> Monad[B]: ...
+
+    def then[B](self: Monad[A], mb: Monad[B]) -> Monad[B]:
+        return mb
 
 
 class Foldable[A](ABC):
@@ -35,9 +38,4 @@ class Foldable[A](ABC):
 
 class MonadTrans[M: Monad, A](Monad, ABC):
     @classmethod
-    def lift(cls, ma: Monad[A]) -> MonadTrans[M, A]:
-        # TODO: validate ma is an isinstance of Monad
-        mt = cls.__new__()
-        mt._base_monad = ma.__class__
-        mt.value = ma
-        return mt
+    def lift(cls, ma: Monad[A]) -> MonadTrans[M, A]: ...

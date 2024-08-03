@@ -5,17 +5,19 @@ from typing import Callable
 from .categories import Monad, Foldable
 
 
-class IO[A](Monad, Foldable, Callable):
-    def __init__(self, effect: Callable[A] | None = None) -> None:
+class IO[A](Monad[A], Foldable[A], Callable[[...], A]):
+    def __init__(
+        self, result: A | None = None, effect: Callable[A] | None = None
+    ) -> None:
         self.executed = False
         self.effect = effect
-        self.result = None
+        self.result = result
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(effect={repr(self.effect)})"
+        return f"{self.__class__.__name__}(result={repr(self.result)})"
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__} {self.effect}"
+        return f"{self.__class__.__name__} {self.result}"
 
     def __enter__(self, *args, **kwargs) -> A:
         self()
@@ -27,6 +29,9 @@ class IO[A](Monad, Foldable, Callable):
     def __call__(self) -> None:
         if self.executed:
             raise ValueError
+        if not isinstance(self.effect, Callable):
+            self.executed = True
+            return
         self.result = self.effect()
         self.executed = True
 
@@ -56,12 +61,11 @@ class IO[A](Monad, Foldable, Callable):
         if not self.executed:
             self()
         io = f(self.result)
-        io()
         return io
 
 
 def ioeffect[A](f: Callable[..., A]) -> Callable[IO[A]]:
-    def effect(*args, **kwargs):
-        return IO(partial(f, *args, **kwargs))
+    def ioeffect(*args, **kwargs):
+        return IO(effect=lambda: f(*args, **kwargs))
 
-    return effect
+    return ioeffect
