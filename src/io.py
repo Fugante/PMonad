@@ -21,14 +21,14 @@ class IO[A](Monad[A]):
     def map[A, B](self: IO[A], f: Callable[A, B]) -> IO[B]:
         try:
             b = f(self.result)
-        except ValueError:
+        except TypeError:
             b = partial(f, self.result)
         return IO(result=b)
 
     def apply[B](self: IO[A], f: IO[Callable[A, B]]) -> IO[B]:
         try:
             b = f.result(self.result)
-        except ValueError:
+        except TypeError:
             b = partial(f.result, self.result)
         return IO(result=b)
 

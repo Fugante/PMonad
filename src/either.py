@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC
+from functools import partial
 from typing import Callable
 
 from .categories import Semigroup, Monad
@@ -33,7 +34,11 @@ class Either[E, A](Semigroup, Monad[A], ABC):
     def map[B](self: Either[E, A], f: Callable[A, B]) -> Either[E, B]:
         match self:
             case Right(value=a):
-                return Right(f(a))
+                try:
+                    b = f(a)
+                except TypeError:
+                    b = partial(f, a)
+                return Right(b)
             case _:
                 return self
 
@@ -44,7 +49,11 @@ class Either[E, A](Semigroup, Monad[A], ABC):
             case _, Left():
                 return f
             case Right(value=a), Right(value=f):
-                return Right(f(a))
+                try:
+                    b = f(a)
+                except TypeError:
+                    b = partial(f, a)
+                return Right(b)
 
     def bind[B](self: Either[E, A], f: Callable[A, Either[E, B]]) -> Either[E, B]:
         match self:

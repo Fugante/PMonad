@@ -24,7 +24,7 @@ class Mdict[T, A](dict, Monoid, Monad, Foldable):
         for t, a in self.items():
             try:
                 b = f(a)
-            except ValueError:
+            except TypeError:
                 b = partial(f, a)
             bs[t] = b
         return bs
@@ -38,7 +38,7 @@ class Mdict[T, A](dict, Monoid, Monad, Foldable):
             for m2, f in f.items():
                 try:
                     b = f(a)
-                except ValueError:
+                except TypeError:
                     b = partial(f, a)
                 d[m1.mappend(m2)] = b
         return d
