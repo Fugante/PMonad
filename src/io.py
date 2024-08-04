@@ -2,16 +2,15 @@ from __future__ import annotations
 from functools import partial
 from typing import Callable
 
-from .categories import Monad, Foldable
+from .categories import Monad
 
 
-class IO[A](Monad[A], Foldable[A], Callable[[...], A]):
+class IO[A](Monad[A]):
     def __init__(
         self, result: A | None = None, effect: Callable[A] | None = None
     ) -> None:
-        self.executed = False
         self.effect = effect
-        self.result = result
+        self.result = result if effect is None else effect()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(result={repr(self.result)})"
@@ -19,49 +18,22 @@ class IO[A](Monad[A], Foldable[A], Callable[[...], A]):
     def __str__(self) -> str:
         return f"{self.__class__.__name__} {self.result}"
 
-    def __enter__(self, *args, **kwargs) -> A:
-        self()
-        return self.result
-
-    def __exit__(self, *args, **kwargs) -> None:
-        return
-
-    def __call__(self) -> None:
-        if self.executed:
-            raise ValueError
-        if not isinstance(self.effect, Callable):
-            self.executed = True
-            return
-        self.result = self.effect()
-        self.executed = True
-
     def map[A, B](self: IO[A], f: Callable[A, B]) -> IO[B]:
-        if not self.executed:
-            self()
         try:
             b = f(self.result)
         except ValueError:
             b = partial(f, self.result)
-        self.result = b
-        return self
+        return IO(result=b)
 
-    def apply[A, B](self: IO[A], f: IO[Callable[A, B]]) -> IO[B]:
-        if not self.executed:
-            self()
-        if not f.executed:
-            f()
+    def apply[B](self: IO[A], f: IO[Callable[A, B]]) -> IO[B]:
         try:
             b = f.result(self.result)
         except ValueError:
             b = partial(f.result, self.result)
-        self.result = b
-        return self
+        return IO(result=b)
 
-    def bind[A, B](self: IO[A], f: Callable[A, IO[B]]) -> IO[B]:
-        if not self.executed:
-            self()
-        io = f(self.result)
-        return io
+    def bind[B](self: IO[A], f: Callable[A, IO[B]]) -> IO[B]:
+        return f(self.result)
 
 
 def ioeffect[A](f: Callable[..., A]) -> Callable[IO[A]]:

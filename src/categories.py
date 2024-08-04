@@ -1,5 +1,5 @@
 from __future__ import annotations
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Callable
 
 
@@ -9,14 +9,16 @@ class Semigroup(ABC):
 
 class Monoid(Semigroup, ABC):
     @classmethod
-    def mempty(cls) -> Monoid: ...
+    def mempty(cls, wrapped_class: type) -> Monoid: ...
 
 
 class Functor[A](ABC):
+    @abstractmethod
     def map[B](self: Functor[A], f: Callable[A, B]) -> Functor[B]: ...
 
 
 class Applicative[A](Functor[A], ABC):
+    @abstractmethod
     def apply[B](
         self: Applicative[A], f: Applicative[Callable[A, B]]
     ) -> Applicative[B]: ...
@@ -28,6 +30,7 @@ class Applicative[A](Functor[A], ABC):
 
 
 class Monad[A](Applicative[A], ABC):
+    @abstractmethod
     def bind[B](self: Monad[A], f: Callable[A, Monad[B]]) -> Monad[B]: ...
 
     def then[B](self: Monad[A], mb: Monad[B]) -> Monad[B]:
@@ -35,9 +38,14 @@ class Monad[A](Applicative[A], ABC):
 
 
 class Foldable[A](ABC):
+    @abstractmethod
     def fold[A, B](self: Foldable[A], f: Callable[[A, B], B], b: B) -> B: ...
 
 
 class MonadTrans[M: Monad, A](Monad, ABC):
+    @abstractmethod
+    def run(self: MonadTrans[M, A]) -> M[A]: ...
+
     @classmethod
+    @abstractmethod
     def lift(cls, ma: Monad[A]) -> MonadTrans[M, A]: ...
