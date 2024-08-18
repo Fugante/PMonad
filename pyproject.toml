@@ -1,0 +1,16 @@
+name = PMonad
+version = 0.0.1
+author = Francisco Langner
+author_email = ignisacedia@hotmail.com
+description = A rip-off of Haskell's common classes
+long_description = file: README.md, LICENSE
+keywords = functional, programming, haskell, monad, functor, applicative, transformers
+license = MIT
+classifiers = Programming Language :: Python :: 3
+
+[options]
+python_requires = >=3.12
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
