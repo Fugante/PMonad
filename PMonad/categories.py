@@ -7,14 +7,15 @@ from .functions import const, identity
 
 class Semigroup(ABC):
     def __add__(self, s: Semigroup) -> Semigroup:
-        return self.append(s)
+        return self.concat(s)
 
-    def append(self: Semigroup, s: Semigroup) -> Semigroup: ...
+    @abstractmethod
+    def concat(self: Semigroup, s: Semigroup) -> Semigroup: ...
 
 
 class Monoid(Semigroup, ABC):
     @classmethod
-    def mempty(cls, wrapped_class: type) -> Monoid: ...
+    def empty(cls, wrapped_class: type) -> Monoid: ...
 
 
 class Functor[A](ABC):

@@ -5,13 +5,16 @@ from typing import Callable, Iterable, Awaitable
 from .categories import Monoid, Monad, Foldable
 
 
-class Mlist[A](list, Monoid, Monad[A], Foldable):
+class Mlist[A](list, Monoid, Monad[A], Foldable[A]):
     def __init__(self, iterable: Iterable[A] | None = None) -> None:
         super().__init__(iterable if iterable is not None else [])
 
     @classmethod
-    def mempty(cls) -> Mlist[A]:
-        return Mlist([])
+    def empty(cls) -> Mlist[A]:
+        return Mlist()
+
+    def concat(self, s: Mlist[A]) -> Mlist[A]:
+        return super().__add__(s)
 
     def map[A, B](self: Mlist[A], f: Callable[A, B]) -> Mlist[B]:
         bs = []

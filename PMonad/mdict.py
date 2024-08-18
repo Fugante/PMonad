@@ -5,19 +5,16 @@ from typing import Callable
 from .categories import Monoid, Monad, Foldable
 
 
-class Mdict[T, A](dict, Monoid, Monad, Foldable):
+class Mdict[T, A](dict, Monoid, Monad[A], Foldable[A]):
     def __init__(self, value: dict[T, A] = None) -> None:
         super().__init__(value if value is not None else {})
 
-    def __add__(self: Mdict[T, A], m: Mdict[T, A]) -> Mdict[T, A]:
-        return self.append(m)
-
     @classmethod
-    def mempty(cls) -> Mdict[T, A]:
+    def empty(cls) -> Mdict[T, A]:
         return cls()
 
-    def append(self: Mdict[T, A], m: Mdict[T, A]) -> Mdict[T, A]:
-        return self.update(m)
+    def concat(self: Mdict[T, A], m: Mdict[T, A]) -> Mdict[T, A]:
+        return Mdict({k: v for k, v in tuple(self.items()) + tuple(m.items())})
 
     def map[A, B](self: Mdict[T, A], f: Callable[A, B]) -> Mdict[T, B]:
         bs = Mdict()
@@ -32,7 +29,6 @@ class Mdict[T, A](dict, Monoid, Monad, Foldable):
     def apply[A, B](
         self: Mdict[Monoid, A], f: Mdict[Monoid, Callable[A, B]]
     ) -> Mdict[Monoid, B]:
-        # TODO: raise error if self and f are not Monoids
         d = Mdict()
         for m1, a in self.items():
             for m2, f in f.items():
@@ -40,7 +36,7 @@ class Mdict[T, A](dict, Monoid, Monad, Foldable):
                     b = f(a)
                 except TypeError:
                     b = partial(f, a)
-                d[m1.mappend(m2)] = b
+                d[m1.concat(m2)] = b
         return d
 
     def bind[A, B](self: Mdict[T, A], f: Callable[A, Mdict[T, B]]) -> Mdict[T, B]:

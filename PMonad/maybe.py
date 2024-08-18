@@ -23,10 +23,10 @@ class Maybe[A](Monad[A], Monoid, Foldable[A], ABC):
         return isinstance(self, Nothing)
 
     @classmethod
-    def mempty(cls) -> Maybe[A]:
+    def empty(cls) -> Maybe[A]:
         return Nothing()
 
-    def append(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
+    def concat(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
         match (self, m):
             case (Just(value=a1), Just(value=a2)):
                 return Just(a1 + a2)

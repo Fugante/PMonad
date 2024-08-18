@@ -13,9 +13,6 @@ class Either[E, A](Semigroup, Monad[A], ABC):
     def __str__(self) -> str:
         return f"{self.__class__.__name__} {self.value}"
 
-    def __add__(self: Either[E, A], e: Either[E, A]) -> Either[E, A]:
-        return self.append(e)
-
     @property
     def is_right(self: Either[E, A]) -> bool:
         return isinstance(self, Right)
@@ -24,12 +21,8 @@ class Either[E, A](Semigroup, Monad[A], ABC):
     def is_left(self: Either[E, A]) -> bool:
         return isinstance(self, Left)
 
-    def append(self: Either[E, A], e: Either[E, A]) -> Either[E, A]:
-        match self, e:
-            case Left(), e:
-                return e
-            case Right(), _:
-                return self
+    def concat(self: Either[E, A], e: Either[E, A]) -> Either[E, A]:
+        return self if self.is_right else e
 
     def map[B](self: Either[E, A], f: Callable[A, B]) -> Either[E, B]:
         match self:
