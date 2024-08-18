@@ -1,8 +1,8 @@
 from __future__ import annotations
-from functools import partial
 from typing import Callable
 
 from .categories import Monoid, Monad, Foldable
+from .functions import trycall
 
 
 class Mdict[T, A](dict, Monoid, Monad[A], Foldable[A]):
@@ -19,11 +19,7 @@ class Mdict[T, A](dict, Monoid, Monad[A], Foldable[A]):
     def map[A, B](self: Mdict[T, A], f: Callable[A, B]) -> Mdict[T, B]:
         bs = Mdict()
         for t, a in self.items():
-            try:
-                b = f(a)
-            except TypeError:
-                b = partial(f, a)
-            bs[t] = b
+            bs[t] = trycall(f, a)
         return bs
 
     def apply[A, B](
@@ -32,11 +28,7 @@ class Mdict[T, A](dict, Monoid, Monad[A], Foldable[A]):
         d = Mdict()
         for m1, a in self.items():
             for m2, f in f.items():
-                try:
-                    b = f(a)
-                except TypeError:
-                    b = partial(f, a)
-                d[m1.concat(m2)] = b
+                d[m1.concat(m2)] = trycall(f, a)
         return d
 
     def bind[A, B](self: Mdict[T, A], f: Callable[A, Mdict[T, B]]) -> Mdict[T, B]:

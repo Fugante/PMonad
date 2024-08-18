@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC
-from functools import partial
 from typing import Callable
 
 from .categories import Semigroup, Monad
+from .functions import trycall
 
 
 class Either[E, A](Semigroup, Monad[A], ABC):
@@ -25,35 +25,17 @@ class Either[E, A](Semigroup, Monad[A], ABC):
         return self if self.is_right else e
 
     def map[B](self: Either[E, A], f: Callable[A, B]) -> Either[E, B]:
-        match self:
-            case Right(value=a):
-                try:
-                    b = f(a)
-                except TypeError:
-                    b = partial(f, a)
-                return Right(b)
-            case _:
-                return self
+        return Right(trycall(f, self.value)) if self.is_right else self
 
     def apply[B](self: Either[E, A], f: Either[E, Callable[A, B]]) -> Either[E, B]:
-        match self, f:
-            case Left(), _:
-                return self
-            case _, Left():
-                return f
-            case Right(value=a), Right(value=f):
-                try:
-                    b = f(a)
-                except TypeError:
-                    b = partial(f, a)
-                return Right(b)
+        if self.is_left:
+            return self
+        if f.is_left:
+            return f
+        return Right(trycall(f.value, self.value))
 
     def bind[B](self: Either[E, A], f: Callable[A, Either[E, B]]) -> Either[E, B]:
-        match self:
-            case Right(value=a):
-                return f(a)
-            case _:
-                return self
+        return f(self.value) if self.is_right else self
 
 
 class Left[E](Either):

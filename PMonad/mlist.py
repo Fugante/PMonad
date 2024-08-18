@@ -3,6 +3,7 @@ from functools import partial
 from typing import Callable, Iterable, Awaitable
 
 from .categories import Monoid, Monad, Foldable
+from functions import trycall
 
 
 class Mlist[A](list, Monoid, Monad[A], Foldable[A]):
@@ -19,11 +20,7 @@ class Mlist[A](list, Monoid, Monad[A], Foldable[A]):
     def map[A, B](self: Mlist[A], f: Callable[A, B]) -> Mlist[B]:
         bs = []
         for a in self:
-            try:
-                b = f(a)
-            except TypeError:
-                b = partial(f, a)
-            bs.append(b)
+            bs.append(trycall(f, a))
         return Mlist(bs)
 
     async def amap[A, B](self: Mlist[A], f: Callable[A, Awaitable[B]]) -> Mlist[B]:
@@ -40,11 +37,7 @@ class Mlist[A](list, Monoid, Monad[A], Foldable[A]):
         bs = []
         for a in self:
             for f in fs:
-                try:
-                    b = f(a)
-                except TypeError:
-                    b = partial(f, a)
-                bs.append(b)
+                bs.append(trycall(f, a))
         return Mlist(bs)
 
     def bind[A, B](self: Mlist[A], f: Callable[A, Mlist[B]]) -> Mlist[B]:

@@ -1,9 +1,9 @@
 from __future__ import annotations
 from abc import ABC
-from functools import partial
 from typing import Callable
 
 from .categories import Monoid, Monad, Foldable
+from .functions import trycall
 
 
 class Maybe[A](Monad[A], Monoid, Foldable[A], ABC):
@@ -38,40 +38,18 @@ class Maybe[A](Monad[A], Monoid, Foldable[A], ABC):
                 return Nothing()
 
     def map[B](self: Maybe[A], f: Callable[A, B]) -> Maybe[B]:
-        match self:
-            case Just(value=a):
-                try:
-                    b = f(a)
-                except TypeError:
-                    b = partial(f, a)
-                return Just(b)
-            case _:
-                return Nothing()
+        return Just(trycall(f, self.value)) if self.is_just else Nothing()
 
     def apply[B](self: Maybe[A], f: Maybe[Callable[A, B]]) -> Maybe[B]:
-        match (self, f):
-            case (Just(value=a), Just(value=f)):
-                try:
-                    b = f(a)
-                except TypeError:
-                    b = partial(f, a)
-                return Just(b)
-            case _:
-                return Nothing()
+        if self.is_just and f.is_just:
+            return Just(trycall(f.value, self.value))
+        return Nothing()
 
     def bind[B](self: Maybe[A], f: Callable[A, Maybe[B]]) -> Maybe[B]:
-        match self:
-            case Just(value=a):
-                return f(a)
-            case _:
-                return Nothing()
+        return f(self.value) if self.is_just else Nothing()
 
     def fold[B](self: Maybe[A], f: Callable[[A, B], B], b: B) -> B:
-        match self:
-            case Just(value=a):
-                return f(a, b)
-            case _:
-                return b
+        return f(self.value, b) if self.is_just else b
 
 
 class Just[A](Maybe[A]):

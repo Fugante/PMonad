@@ -1,8 +1,8 @@
 from __future__ import annotations
-from functools import partial
 from typing import Callable
 
 from .categories import Monad
+from .functions import trycall
 
 
 class IO[A](Monad[A]):
@@ -19,18 +19,10 @@ class IO[A](Monad[A]):
         return f"{self.__class__.__name__} {self.result}"
 
     def map[A, B](self: IO[A], f: Callable[A, B]) -> IO[B]:
-        try:
-            b = f(self.result)
-        except TypeError:
-            b = partial(f, self.result)
-        return IO(result=b)
+        return IO(result=trycall(f, self.result))
 
     def apply[B](self: IO[A], f: IO[Callable[A, B]]) -> IO[B]:
-        try:
-            b = f.result(self.result)
-        except TypeError:
-            b = partial(f.result, self.result)
-        return IO(result=b)
+        return IO(result=trycall(f.result, self.result))
 
     def bind[B](self: IO[A], f: Callable[A, IO[B]]) -> IO[B]:
         return f(self.result)

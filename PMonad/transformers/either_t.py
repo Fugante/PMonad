@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable
 
 from ..categories import Monad, MonadTrans
-from ..either import Either, Right, Left
+from ..either import Either, Right
 
 
 class EitherT[M: Monad, E, A](MonadTrans):
@@ -28,11 +28,9 @@ class EitherT[M: Monad, E, A](MonadTrans):
         self: EitherT[M, E, A], f: EitherT[M, E, Callable[A, B]]
     ) -> EitherT[M, E, B]:
         def bindf(ea: Either[E, A]) -> M[Either[E, B]]:
-            match ea:
-                case Left():
-                    return self._base_monad(ea)
-                case Right(value=f):
-                    return self.run().map(lambda ea: ea.map(f))
+            if ea.is_left:
+                return self._base_monad(ea)
+            return self.run().map(lambda ea_: ea_.map(ea.value))
 
         return EitherT(self.run().bind(bindf))
 
@@ -40,11 +38,9 @@ class EitherT[M: Monad, E, A](MonadTrans):
         self: EitherT[M, E, A], f: Callable[A, EitherT[M, E, B]]
     ) -> EitherT[M, E, B]:
         def bindf(ea: Either[E, A]) -> M[Either[E, B]]:
-            match ea:
-                case Left():
-                    return self._base_monad(ea)
-                case Right(value=a):
-                    return f(a).run()
+            if ea.is_left:
+                return self._base_monad(ea)
+            return f(ea.value).run()
 
         return EitherT(self.run().bind(bindf))
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Callable
 
 from ..categories import Monad, MonadTrans
-from ..maybe import Maybe, Just, Nothing
+from ..maybe import Maybe
 
 
 class MaybeT[M: Monad, A](MonadTrans):
@@ -31,11 +31,9 @@ class MaybeT[M: Monad, A](MonadTrans):
         self: MaybeT[M, A], f: MaybeT[M, Callable[A, B]]
     ) -> MaybeT[M, B]:
         def bindf(ma: Maybe[A]) -> M[Maybe[B]]:
-            match ma:
-                case Nothing():
-                    return self._base_monad(ma)
-                case Just(value=a):
-                    return f.run().map(lambda ma: ma.map(f(a)))
+            if ma.is_nothing:
+                return self._base_monad(ma)
+            return f.run().map(lambda ma_: ma_.map(f(ma.value)))
 
         return MaybeT(self.run().bind(bindf))
 
@@ -43,11 +41,9 @@ class MaybeT[M: Monad, A](MonadTrans):
         self: MaybeT[M, A], f: Callable[A, MaybeT[M, B]]
     ) -> MaybeT[Monad, B]:
         def bindf(ma: Maybe[A]) -> M[Maybe[B]]:
-            match ma:
-                case Nothing():
-                    return self._base_monad(ma)
-                case Just(value=a):
-                    return f(a).run()
+            if ma.is_nothing:
+                return self._base_monad(ma)
+            return f(ma.value).run()
 
         return MaybeT(self.run().bind(bindf))
 
