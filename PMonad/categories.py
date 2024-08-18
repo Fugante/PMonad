@@ -2,6 +2,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable
 
+from .functions import const, identity
+
 
 class Semigroup(ABC):
     def append(self: Semigroup, s: Semigroup) -> Semigroup: ...
@@ -16,6 +18,9 @@ class Functor[A](ABC):
     @abstractmethod
     def map[B](self: Functor[A], f: Callable[A, B]) -> Functor[B]: ...
 
+    def map_replace[B](self: Functor[A], b: B) -> Functor[B]:
+        return self.map(const(b))
+
 
 class Applicative[A](Functor[A], ABC):
     @abstractmethod
@@ -26,7 +31,13 @@ class Applicative[A](Functor[A], ABC):
     def liftA2[B, C](
         self: Applicative[A], f: Callable[[A, B], C], fb: Applicative[B]
     ) -> Applicative[C]:
-        fb.apply(self.map(f))
+        return fb.apply(self.map(f))
+
+    def rapply[B](self: Applicative[A], b: Applicative[B]) -> Applicative[B]:
+        return b.apply(self.map_replace(identity))
+
+    def lapply[B](self: Applicative[A], b: Applicative[B]) -> Applicative[A]:
+        return self.liftA2(const, b)
 
 
 class Monad[A](Applicative[A], ABC):
