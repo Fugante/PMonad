@@ -2,6 +2,7 @@ from __future__ import annotations
 from abc import ABC
 from functools import partial
 from typing import Callable
+
 from .categories import Monoid, Monad, Foldable
 
 
@@ -13,9 +14,6 @@ class Maybe[A](Monad[A], Monoid, Foldable[A], ABC):
         just.value = value
         return just
 
-    def __add__(self: Maybe[A], m: Maybe[A]) -> Maybe[A]:
-        return self.append(m)
-
     @property
     def is_just[A](self: Maybe[A]) -> bool:
         return isinstance(self, Just)
@@ -25,13 +23,13 @@ class Maybe[A](Monad[A], Monoid, Foldable[A], ABC):
         return isinstance(self, Nothing)
 
     @classmethod
-    def mempty(cls, wrapped_class: type) -> Maybe[A]:
-        return Nothing(wrapped_class)
+    def mempty(cls) -> Maybe[A]:
+        return Nothing()
 
     def append(self: Maybe[Monoid], m: Maybe[Monoid]) -> Maybe[Monoid]:
         match (self, m):
             case (Just(value=a1), Just(value=a2)):
-                return Just(a1.append(a2))
+                return Just(a1 + a2)
             case (Just(value=a1), Nothing):
                 return Just(value=a1)
             case (Nothing, Just(value=a2)):

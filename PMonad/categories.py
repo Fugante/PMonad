@@ -6,6 +6,9 @@ from .functions import const, identity
 
 
 class Semigroup(ABC):
+    def __add__(self, s: Semigroup) -> Semigroup:
+        return self.append(s)
+
     def append(self: Semigroup, s: Semigroup) -> Semigroup: ...
 
 
