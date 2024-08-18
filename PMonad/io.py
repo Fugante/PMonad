@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import Callable
 
-from .categories import Monad
+from .categories import Monoid, Monad
 from .functions import trycall
 
 
-class IO[A](Monad[A]):
+class IO[A](Monoid, Monad[A]):
     def __init__(
         self, result: A | None = None, effect: Callable[A] | None = None
     ) -> None:
@@ -18,7 +18,14 @@ class IO[A](Monad[A]):
     def __str__(self) -> str:
         return f"{self.__class__.__name__} {self.result}"
 
-    def map[A, B](self: IO[A], f: Callable[A, B]) -> IO[B]:
+    @classmethod
+    def empty(cls) -> IO[A]:
+        return IO()
+
+    def concat(self, s: IO[A]) -> IO[A]:
+        return IO(self.result.concat(s.result))
+
+    def map[B](self: IO[A], f: Callable[A, B]) -> IO[B]:
         return IO(result=trycall(f, self.result))
 
     def apply[B](self: IO[A], f: IO[Callable[A, B]]) -> IO[B]:
@@ -33,3 +40,8 @@ def ioeffect[A](f: Callable[..., A]) -> Callable[IO[A]]:
         return IO(effect=lambda: f(*args, **kwargs))
 
     return ioeffect
+
+
+ioprint = ioeffect(print)
+
+ioinput = ioeffect(input)
