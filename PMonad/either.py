@@ -46,3 +46,15 @@ class Left[E](Either):
 class Right[A](Either):
     def __init__(self, value: A) -> None:
         self.value = value
+
+
+def either[E, A, B](fa: Callable[A, B], fe: Callable[E, B], ea: Either[E, A]) -> B:
+    return trycall(fa, ea.value) if ea.is_right else trycall(fe, ea.value)
+
+
+def from_left[E, A](e: E, ea: Either[E, A]) -> E:
+    return ea.value if ea.is_left else e
+
+
+def from_right[E, A](a: A, ea: Either[E, A]) -> A:
+    return ea.value if ea.is_right else a

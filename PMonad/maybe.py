@@ -69,3 +69,11 @@ class Nothing[A](Maybe[A]):
 
     def __str(self) -> str:
         return self.__class__.__name__
+
+
+def maybe[A, B](b: B, f: Callable[A, B], ma: Maybe[A]) -> B:
+    return trycall(f, ma.value) if ma.is_just else b
+
+
+def from_maybe[A](a: A, ma: Maybe[A]) -> A:
+    return ma.value if ma.is_just else a

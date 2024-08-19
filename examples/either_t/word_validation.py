@@ -1,4 +1,4 @@
-from PMonad.io import IO, ioinput, ioprint
+from PMonad.io import ioinput, ioprint
 from PMonad.either import Either, Left, Right
 from PMonad.transformers.either_t import EitherT
 
@@ -26,11 +26,7 @@ def main() -> None: (
                 ioinput("Write a number: ")
                 .map(validate_number)
             )
-            .bind(
-                lambda number: (
-                    EitherT.lift(IO(result=f"{word} {number}"))
-                )
-            )
+            .bind(lambda number: EitherT.lift(ioprint(f"{word} {number}")))
         )
     )
     .run()
